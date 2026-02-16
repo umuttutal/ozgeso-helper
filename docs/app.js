@@ -244,7 +244,7 @@ function createCombinedChart(canvasId, absorptionData, emissionData) {
                     display: subtitle !== '',
                     text: subtitle,
                     position: 'top',
-                    align: 'start',
+                    align: 'end',
                     font: {
                         size: 11,
                         weight: 'normal',
