@@ -371,175 +371,74 @@ function renderEntry(experiment) {
 // DOWNLOAD CHART FUNCTION
 // ============================================================================
 function downloadChart(experimentId, absorptionData, emissionData) {
-    // Create a hidden canvas for high-res export
-    const exportCanvas = document.createElement('canvas');
-    const scaleFactor = 4; // 4x resolution for ultra-high quality
-    const width = 1400;  // Desktop width with padding
-    const height = 700;  // Desktop height with padding
-    const padding = 40;  // Padding around chart
+    const canvasId = `spectrum-chart-${experimentId}`;
+    const chart = chartInstances[canvasId];
     
-    exportCanvas.width = width * scaleFactor;
-    exportCanvas.height = height * scaleFactor;
-    exportCanvas.style.display = 'none';
-    document.body.appendChild(exportCanvas);
-    
-    const ctx = exportCanvas.getContext('2d');
-    ctx.scale(scaleFactor, scaleFactor);
-    
-    // Fill white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, width, height);
-    
-    // Normalize data
-    const normalizedAbsorption = normalizeData(absorptionData);
-    const normalizedEmission = normalizeData(emissionData);
-    
-    // Calculate emission stats
-    const emissionStats = calculateEmissionStats(emissionData);
-    let subtitle = '';
-    if (emissionStats && emissionStats.peakWavelength) {
-        subtitle = `Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm`;
-        if (emissionStats.fwhm) {
-            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm`;
-        }
+    if (!chart) {
+        alert('No chart available to download');
+        return;
     }
     
-    // Calculate x-axis range
-    const allXValues = [
-        ...normalizedAbsorption.map(p => p.x),
-        ...normalizedEmission.map(p => p.x)
-    ];
-    const minX = Math.min(...allXValues);
-    const maxX = Math.max(...allXValues);
+    const originalCanvas = document.getElementById(canvasId);
+    const isMobile = window.innerWidth <= 768;
     
-    // Create chart instance for export
-    const exportChart = new Chart(exportCanvas, {
-        type: 'line',
-        data: {
-            datasets: [
-                {
-                    label: 'Absorption',
-                    data: normalizedAbsorption,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.0)',
-                    borderWidth: 3,
-                    tension: 0.2,
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 0,
-                    borderDash: []
-                },
-                {
-                    label: 'Emission',
-                    data: normalizedEmission,
-                    borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, 0.0)',
-                    borderWidth: 3,
-                    tension: 0.2,
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 0,
-                    borderDash: []
-                }
-            ]
-        },
-        options: {
-            responsive: false,
-            animation: false,
-            devicePixelRatio: scaleFactor,
-            layout: {
-                padding: {
-                    left: padding,
-                    right: padding,
-                    top: padding + 20,
-                    bottom: padding
-                }
-            },
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'end',
-                    labels: {
-                        font: { size: 14 },
-                        usePointStyle: true,
-                        boxWidth: 8,
-                        padding: 15
-                    }
-                },
-                subtitle: {
-                    display: subtitle !== '',
-                    text: subtitle,
-                    position: 'top',
-                    align: 'end',
-                    font: {
-                        size: 14,
-                        weight: 'normal',
-                        family: 'monospace'
-                    },
-                    color: '#666',
-                    padding: {
-                        bottom: 15
-                    }
-                },
-                tooltip: {
-                    enabled: false
-                }
-            },
-            scales: {
-                x: {
-                    type: 'linear',
-                    min: minX,
-                    max: maxX,
-                    title: {
-                        display: true,
-                        text: 'Wavelength (nm)',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    ticks: {
-                        maxTicksLimit: 10,
-                        font: { size: 13 }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.08)',
-                        lineWidth: 1
-                    }
-                },
-                y: {
-                    min: 0,
-                    max: 1,
-                    title: {
-                        display: true,
-                        text: 'Normalized Absorbance / PL Intensity (a.u.)',
-                        font: { size: 16, weight: 'bold' }
-                    },
-                    ticks: {
-                        stepSize: 0.2,
-                        font: { size: 13 },
-                        callback: function(value) {
-                            return value.toFixed(1);
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.08)',
-                        lineWidth: 1
-                    }
-                }
-            }
-        }
-    });
+    // Desktop dimensions for export
+    const exportWidth = 1400;
+    const exportHeight = 700;
+    const scaleFactor = 3; // 3x for high quality
     
-    // Wait for chart to render, then export
-    setTimeout(() => {
+    // Store original dimensions
+    const originalWidth = originalCanvas.width;
+    const originalHeight = originalCanvas.height;
+    const originalStyle = {
+        width: originalCanvas.style.width,
+        height: originalCanvas.style.height
+    };
+    
+    // Function to create and download image
+    const createDownload = () => {
+        // Create temp canvas with white background
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = exportWidth * scaleFactor;
+        tempCanvas.height = exportHeight * scaleFactor;
+        const ctx = tempCanvas.getContext('2d');
+        
+        // Scale for high DPI
+        ctx.scale(scaleFactor, scaleFactor);
+        
+        // Fill white background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, exportWidth, exportHeight);
+        
+        // Draw chart
+        ctx.drawImage(originalCanvas, 0, 0, exportWidth, exportHeight);
+        
+        // Download
         const link = document.createElement('a');
         link.download = `spectrum_${experimentId}.png`;
-        link.href = exportCanvas.toDataURL('image/png', 1.0);
+        link.href = tempCanvas.toDataURL('image/png', 1.0);
         link.click();
         
-        // Clean up
-        exportChart.destroy();
-        document.body.removeChild(exportCanvas);
-    }, 500);
+        // Restore original size if mobile
+        if (isMobile) {
+            chart.resize(originalWidth, originalHeight);
+            if (originalStyle.width) originalCanvas.style.width = originalStyle.width;
+            if (originalStyle.height) originalCanvas.style.height = originalStyle.height;
+        }
+    };
+    
+    if (isMobile) {
+        // Temporarily resize to desktop dimensions
+        originalCanvas.style.width = exportWidth + 'px';
+        originalCanvas.style.height = exportHeight + 'px';
+        chart.resize(exportWidth, exportHeight);
+        
+        // Wait for resize to complete
+        setTimeout(createDownload, 200);
+    } else {
+        // Desktop: direct export
+        createDownload();
+    }
 }
 
 // ============================================================================
