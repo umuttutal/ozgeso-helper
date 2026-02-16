@@ -112,6 +112,50 @@ function normalizeData(data) {
     }));
 }
 
+function calculateEmissionStats(data) {
+    if (!data || data.length === 0) return null;
+    
+    // Find peak (max y value)
+    let peak = data[0];
+    for (let point of data) {
+        if (point.y > peak.y) {
+            peak = point;
+        }
+    }
+    
+    // Calculate FWHM (Full Width at Half Maximum)
+    const halfMax = peak.y / 2;
+    let leftX = null;
+    let rightX = null;
+    
+    // Find left crossing point
+    for (let i = 0; i < data.length - 1; i++) {
+        if (data[i].y <= halfMax && data[i + 1].y >= halfMax) {
+            // Linear interpolation
+            const ratio = (halfMax - data[i].y) / (data[i + 1].y - data[i].y);
+            leftX = data[i].x + ratio * (data[i + 1].x - data[i].x);
+            break;
+        }
+    }
+    
+    // Find right crossing point
+    for (let i = data.length - 1; i > 0; i--) {
+        if (data[i].y <= halfMax && data[i - 1].y >= halfMax) {
+            // Linear interpolation
+            const ratio = (halfMax - data[i].y) / (data[i - 1].y - data[i].y);
+            rightX = data[i].x + ratio * (data[i - 1].x - data[i].x);
+            break;
+        }
+    }
+    
+    const fwhm = (leftX !== null && rightX !== null) ? Math.abs(rightX - leftX) : null;
+    
+    return {
+        peakWavelength: peak.x,
+        fwhm: fwhm
+    };
+}
+
 function createCombinedChart(canvasId, absorptionData, emissionData) {
     // Destroy existing chart if it exists
     if (chartInstances[canvasId]) {
@@ -127,6 +171,16 @@ function createCombinedChart(canvasId, absorptionData, emissionData) {
     // Normalize both datasets to [0, 1]
     const normalizedAbsorption = normalizeData(absorptionData);
     const normalizedEmission = normalizeData(emissionData);
+    
+    // Calculate emission statistics from original data
+    const emissionStats = calculateEmissionStats(emissionData);
+    let subtitle = '';
+    if (emissionStats && emissionStats.peakWavelength) {
+        subtitle = `Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm`;
+        if (emissionStats.fwhm) {
+            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm`;
+        }
+    }
     
     // Calculate shared x-axis range
     const allXValues = [
@@ -184,6 +238,21 @@ function createCombinedChart(canvasId, absorptionData, emissionData) {
                         usePointStyle: true,
                         boxWidth: 6,
                         padding: 10
+                    }
+                },
+                subtitle: {
+                    display: subtitle !== '',
+                    text: subtitle,
+                    position: 'top',
+                    align: 'start',
+                    font: {
+                        size: 11,
+                        weight: 'normal',
+                        family: 'monospace'
+                    },
+                    color: '#666',
+                    padding: {
+                        bottom: 10
                     }
                 },
                 tooltip: {
@@ -313,25 +382,47 @@ function downloadChart(experimentId) {
         return;
     }
     
-    // Get canvas and create high-res version with white background
-    const canvas = document.getElementById(canvasId);
+    // Create high-resolution canvas (desktop quality)
+    const originalCanvas = document.getElementById(canvasId);
+    const scaleFactor = 3; // 3x resolution for high quality
+    const desktopWidth = 1200;
+    const desktopHeight = 600;
+    
     const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = canvas.width;
-    tempCanvas.height = canvas.height;
+    tempCanvas.width = desktopWidth * scaleFactor;
+    tempCanvas.height = desktopHeight * scaleFactor;
     const ctx = tempCanvas.getContext('2d');
+    
+    // Scale context for high DPI
+    ctx.scale(scaleFactor, scaleFactor);
     
     // Fill white background
     ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    ctx.fillRect(0, 0, desktopWidth, desktopHeight);
     
-    // Draw original canvas on top
-    ctx.drawImage(canvas, 0, 0);
+    // Temporarily resize original chart
+    const originalWidth = originalCanvas.style.width;
+    const originalHeight = originalCanvas.style.height;
     
-    // Download
-    const link = document.createElement('a');
-    link.download = `spectrum_${experimentId}.png`;
-    link.href = tempCanvas.toDataURL('image/png', 1.0);
-    link.click();
+    originalCanvas.width = desktopWidth;
+    originalCanvas.height = desktopHeight;
+    chart.resize(desktopWidth, desktopHeight);
+    
+    // Wait for resize to complete, then draw
+    setTimeout(() => {
+        ctx.drawImage(originalCanvas, 0, 0, desktopWidth, desktopHeight);
+        
+        // Download
+        const link = document.createElement('a');
+        link.download = `spectrum_${experimentId}.png`;
+        link.href = tempCanvas.toDataURL('image/png', 1.0);
+        link.click();
+        
+        // Restore original size
+        if (originalWidth) originalCanvas.style.width = originalWidth;
+        if (originalHeight) originalCanvas.style.height = originalHeight;
+        chart.resize();
+    }, 100);
 }
 
 // ============================================================================
