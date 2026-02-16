@@ -347,7 +347,7 @@ function renderEntry(experiment) {
     entriesContainer.appendChild(entry);
 
     // Add event listeners for buttons
-    entry.querySelector('.btn-download').addEventListener('click', () => downloadChart(experiment.id));
+    entry.querySelector('.btn-download').addEventListener('click', () => downloadChart(experiment.id, experiment.absorption_data || [], experiment.emission_data || []));
     entry.querySelector('.btn-edit').addEventListener('click', () => editEntry(experiment));
     entry.querySelector('.btn-delete').addEventListener('click', () => deleteEntry(experiment.id));
 
@@ -370,56 +370,176 @@ function renderEntry(experiment) {
 // ============================================================================
 // DOWNLOAD CHART FUNCTION
 // ============================================================================
-function downloadChart(experimentId) {
-    const canvasId = `spectrum-chart-${experimentId}`;
-    const chart = chartInstances[canvasId];
+function downloadChart(experimentId, absorptionData, emissionData) {
+    // Create a hidden canvas for high-res export
+    const exportCanvas = document.createElement('canvas');
+    const scaleFactor = 4; // 4x resolution for ultra-high quality
+    const width = 1400;  // Desktop width with padding
+    const height = 700;  // Desktop height with padding
+    const padding = 40;  // Padding around chart
     
-    if (!chart) {
-        alert('No chart available to download');
-        return;
-    }
+    exportCanvas.width = width * scaleFactor;
+    exportCanvas.height = height * scaleFactor;
+    exportCanvas.style.display = 'none';
+    document.body.appendChild(exportCanvas);
     
-    // Create high-resolution canvas (desktop quality)
-    const originalCanvas = document.getElementById(canvasId);
-    const scaleFactor = 3; // 3x resolution for high quality
-    const desktopWidth = 1200;
-    const desktopHeight = 600;
-    
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = desktopWidth * scaleFactor;
-    tempCanvas.height = desktopHeight * scaleFactor;
-    const ctx = tempCanvas.getContext('2d');
-    
-    // Scale context for high DPI
+    const ctx = exportCanvas.getContext('2d');
     ctx.scale(scaleFactor, scaleFactor);
     
     // Fill white background
     ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, desktopWidth, desktopHeight);
+    ctx.fillRect(0, 0, width, height);
     
-    // Temporarily resize original chart
-    const originalWidth = originalCanvas.style.width;
-    const originalHeight = originalCanvas.style.height;
+    // Normalize data
+    const normalizedAbsorption = normalizeData(absorptionData);
+    const normalizedEmission = normalizeData(emissionData);
     
-    originalCanvas.width = desktopWidth;
-    originalCanvas.height = desktopHeight;
-    chart.resize(desktopWidth, desktopHeight);
+    // Calculate emission stats
+    const emissionStats = calculateEmissionStats(emissionData);
+    let subtitle = '';
+    if (emissionStats && emissionStats.peakWavelength) {
+        subtitle = `Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm`;
+        if (emissionStats.fwhm) {
+            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm`;
+        }
+    }
     
-    // Wait for resize to complete, then draw
+    // Calculate x-axis range
+    const allXValues = [
+        ...normalizedAbsorption.map(p => p.x),
+        ...normalizedEmission.map(p => p.x)
+    ];
+    const minX = Math.min(...allXValues);
+    const maxX = Math.max(...allXValues);
+    
+    // Create chart instance for export
+    const exportChart = new Chart(exportCanvas, {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Absorption',
+                    data: normalizedAbsorption,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.0)',
+                    borderWidth: 3,
+                    tension: 0.2,
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderDash: []
+                },
+                {
+                    label: 'Emission',
+                    data: normalizedEmission,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.0)',
+                    borderWidth: 3,
+                    tension: 0.2,
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderDash: []
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            animation: false,
+            devicePixelRatio: scaleFactor,
+            layout: {
+                padding: {
+                    left: padding,
+                    right: padding,
+                    top: padding + 20,
+                    bottom: padding
+                }
+            },
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        font: { size: 14 },
+                        usePointStyle: true,
+                        boxWidth: 8,
+                        padding: 15
+                    }
+                },
+                subtitle: {
+                    display: subtitle !== '',
+                    text: subtitle,
+                    position: 'top',
+                    align: 'end',
+                    font: {
+                        size: 14,
+                        weight: 'normal',
+                        family: 'monospace'
+                    },
+                    color: '#666',
+                    padding: {
+                        bottom: 15
+                    }
+                },
+                tooltip: {
+                    enabled: false
+                }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    min: minX,
+                    max: maxX,
+                    title: {
+                        display: true,
+                        text: 'Wavelength (nm)',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    ticks: {
+                        maxTicksLimit: 10,
+                        font: { size: 13 }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.08)',
+                        lineWidth: 1
+                    }
+                },
+                y: {
+                    min: 0,
+                    max: 1,
+                    title: {
+                        display: true,
+                        text: 'Normalized Absorbance / PL Intensity (a.u.)',
+                        font: { size: 16, weight: 'bold' }
+                    },
+                    ticks: {
+                        stepSize: 0.2,
+                        font: { size: 13 },
+                        callback: function(value) {
+                            return value.toFixed(1);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.08)',
+                        lineWidth: 1
+                    }
+                }
+            }
+        }
+    });
+    
+    // Wait for chart to render, then export
     setTimeout(() => {
-        ctx.drawImage(originalCanvas, 0, 0, desktopWidth, desktopHeight);
-        
-        // Download
         const link = document.createElement('a');
         link.download = `spectrum_${experimentId}.png`;
-        link.href = tempCanvas.toDataURL('image/png', 1.0);
+        link.href = exportCanvas.toDataURL('image/png', 1.0);
         link.click();
         
-        // Restore original size
-        if (originalWidth) originalCanvas.style.width = originalWidth;
-        if (originalHeight) originalCanvas.style.height = originalHeight;
-        chart.resize();
-    }, 100);
+        // Clean up
+        exportChart.destroy();
+        document.body.removeChild(exportCanvas);
+    }, 500);
 }
 
 // ============================================================================
