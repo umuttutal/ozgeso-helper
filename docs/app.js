@@ -221,6 +221,7 @@ function createCombinedChart(canvasId, absorptionData, emissionData, customCanva
             ]
         },
         options: {
+            animation: false,
             responsive: true,
             maintainAspectRatio: true,
             interaction: {
@@ -362,7 +363,7 @@ function renderEntry(experiment) {
         if (isMobile) {
             // On mobile: show stats only, no chart
             const emissionStats = calculateEmissionStats(experiment.emission_data || []);
-            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666; font-size: 11px;">';
+            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666; font-size: 9px;">';
             
             if (emissionStats && emissionStats.peakWavelength) {
                 statsHTML += `<div style="margin-bottom: 8px;">Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm</div>`;
