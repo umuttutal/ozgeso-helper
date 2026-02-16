@@ -24,16 +24,16 @@
     <div id="entry-modal" class="modal">
         <div class="modal-content">
             <div class="modal-header">
-                <h2>New Experiment</h2>
+                <h2>New Entry</h2>
                 <span class="close">&times;</span>
             </div>
             <form id="entry-form">
                 <div class="form-group">
-                    <label for="title-input">Experiment Title</label>
+                    <label for="title-input">Title</label>
                     <input 
                         type="text" 
                         id="title-input" 
-                        placeholder="e.g., UV-Vis Scan of Sample A" 
+                        placeholder="e.g., dı dım tıss" 
                         required
                     >
                 </div>
@@ -45,7 +45,7 @@
                         id="absorption-csv" 
                         accept=".csv"
                     >
-                    <small>Format: wavelength,intensity</small>
+                    <small>format: wavelength,intensity</small>
                 </div>
 
                 <div class="form-group">
@@ -55,12 +55,12 @@
                         id="emission-csv" 
                         accept=".csv"
                     >
-                    <small>Format: wavelength,intensity</small>
+                    <small>format: wavelength,intensity</small>
                 </div>
 
                 <div class="modal-footer">
                     <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
-                    <button type="submit" class="btn-primary">Save Experiment</button>
+                    <button type="submit" class="btn-primary">Save Entry</button>
                 </div>
             </form>
         </div>
