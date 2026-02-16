@@ -268,7 +268,7 @@ function renderEntry(experiment) {
                     <span class="text">Edit</span>
                 </button>
                 <button class="btn-delete" data-id="${experiment.id}">
-                    <span class="icon">✕</span>
+                    <span class="icon">🗑</span>
                     <span class="text">Delete</span>
                 </button>
             </div>
