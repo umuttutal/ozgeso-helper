@@ -260,15 +260,15 @@ function renderEntry(experiment) {
             </div>
             <div class="entry-actions">
                 <button class="btn-download" data-id="${experiment.id}">
-                    <span class="icon">⬇</span>
+                    <span class="icon">💾</span>
                     <span class="text">Download Plot</span>
                 </button>
                 <button class="btn-edit" data-id="${experiment.id}">
-                    <span class="icon">✎</span>
+                    <span class="icon">✏️</span>
                     <span class="text">Edit</span>
                 </button>
                 <button class="btn-delete" data-id="${experiment.id}">
-                    <span class="icon">🗑</span>
+                    <span class="icon">🗑️</span>
                     <span class="text">Delete</span>
                 </button>
             </div>
