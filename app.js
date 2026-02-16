@@ -380,65 +380,33 @@ function downloadChart(experimentId, absorptionData, emissionData) {
     }
     
     const originalCanvas = document.getElementById(canvasId);
-    const isMobile = window.innerWidth <= 768;
     
-    // Desktop dimensions for export
+    // Always export at desktop size with high quality
     const exportWidth = 1400;
     const exportHeight = 700;
-    const scaleFactor = 3; // 3x for high quality
+    const scaleFactor = 3;
     
-    // Store original dimensions
-    const originalWidth = originalCanvas.width;
-    const originalHeight = originalCanvas.height;
-    const originalStyle = {
-        width: originalCanvas.style.width,
-        height: originalCanvas.style.height
-    };
+    // Create temp canvas for export
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = exportWidth * scaleFactor;
+    tempCanvas.height = exportHeight * scaleFactor;
+    const ctx = tempCanvas.getContext('2d');
     
-    // Function to create and download image
-    const createDownload = () => {
-        // Create temp canvas with white background
-        const tempCanvas = document.createElement('canvas');
-        tempCanvas.width = exportWidth * scaleFactor;
-        tempCanvas.height = exportHeight * scaleFactor;
-        const ctx = tempCanvas.getContext('2d');
-        
-        // Scale for high DPI
-        ctx.scale(scaleFactor, scaleFactor);
-        
-        // Fill white background
-        ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, exportWidth, exportHeight);
-        
-        // Draw chart
-        ctx.drawImage(originalCanvas, 0, 0, exportWidth, exportHeight);
-        
-        // Download
-        const link = document.createElement('a');
-        link.download = `spectrum_${experimentId}.png`;
-        link.href = tempCanvas.toDataURL('image/png', 1.0);
-        link.click();
-        
-        // Restore original size if mobile
-        if (isMobile) {
-            chart.resize(originalWidth, originalHeight);
-            if (originalStyle.width) originalCanvas.style.width = originalStyle.width;
-            if (originalStyle.height) originalCanvas.style.height = originalStyle.height;
-        }
-    };
+    // Scale for high DPI
+    ctx.scale(scaleFactor, scaleFactor);
     
-    if (isMobile) {
-        // Temporarily resize to desktop dimensions
-        originalCanvas.style.width = exportWidth + 'px';
-        originalCanvas.style.height = exportHeight + 'px';
-        chart.resize(exportWidth, exportHeight);
-        
-        // Wait for resize to complete
-        setTimeout(createDownload, 200);
-    } else {
-        // Desktop: direct export
-        createDownload();
-    }
+    // Fill white background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, exportWidth, exportHeight);
+    
+    // Draw current chart scaled to export size
+    ctx.drawImage(originalCanvas, 0, 0, exportWidth, exportHeight);
+    
+    // Download
+    const link = document.createElement('a');
+    link.download = `spectrum_${experimentId}.png`;
+    link.href = tempCanvas.toDataURL('image/png', 1.0);
+    link.click();
 }
 
 // ============================================================================
