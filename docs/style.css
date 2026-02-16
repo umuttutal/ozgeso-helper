@@ -87,32 +87,32 @@ header h1 {
 }
 
 .btn-download {
-    background: #10b981;
+    background: #b7e7d8;
     color: white;
 }
 
 .btn-download:hover {
-    background: #059669;
+    background: #8eb5a9;
     transform: translateY(-1px);
 }
 
 .btn-edit {
-    background: #667eea;
+    background: #c8cff0;
     color: white;
 }
 
 .btn-edit:hover {
-    background: #5568d3;
+    background: #9b9fb9;
     transform: translateY(-1px);
 }
 
 .btn-delete {
-    background: #dc3545;
+    background: #f57e7e;
     color: white;
 }
 
 .btn-delete:hover {
-    background: #c82333;
+    background: #c55b66;
     transform: translateY(-1px);
 }
 
