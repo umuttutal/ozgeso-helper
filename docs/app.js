@@ -259,9 +259,18 @@ function renderEntry(experiment) {
                 <div class="entry-timestamp">${formattedDate}</div>
             </div>
             <div class="entry-actions">
-                <button class="btn-download" data-id="${experiment.id}">Download Plot</button>
-                <button class="btn-edit" data-id="${experiment.id}">Edit</button>
-                <button class="btn-delete" data-id="${experiment.id}">Delete</button>
+                <button class="btn-download" data-id="${experiment.id}">
+                    <span class="icon">⬇</span>
+                    <span class="text">Download Plot</span>
+                </button>
+                <button class="btn-edit" data-id="${experiment.id}">
+                    <span class="icon">✎</span>
+                    <span class="text">Edit</span>
+                </button>
+                <button class="btn-delete" data-id="${experiment.id}">
+                    <span class="icon">✕</span>
+                    <span class="text">Delete</span>
+                </button>
             </div>
         </div>
         <div class="chart-wrapper">
@@ -304,11 +313,24 @@ function downloadChart(experimentId) {
         return;
     }
     
-    // Get canvas and create high-res version
+    // Get canvas and create high-res version with white background
     const canvas = document.getElementById(canvasId);
+    const tempCanvas = document.createElement('canvas');
+    tempCanvas.width = canvas.width;
+    tempCanvas.height = canvas.height;
+    const ctx = tempCanvas.getContext('2d');
+    
+    // Fill white background
+    ctx.fillStyle = 'white';
+    ctx.fillRect(0, 0, tempCanvas.width, tempCanvas.height);
+    
+    // Draw original canvas on top
+    ctx.drawImage(canvas, 0, 0);
+    
+    // Download
     const link = document.createElement('a');
     link.download = `spectrum_${experimentId}.png`;
-    link.href = canvas.toDataURL('image/png', 1.0);
+    link.href = tempCanvas.toDataURL('image/png', 1.0);
     link.click();
 }
 

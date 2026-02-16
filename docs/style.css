@@ -75,6 +75,15 @@ header h1 {
     cursor: pointer;
     transition: all 0.2s ease;
     font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+
+.btn-edit .icon,
+.btn-delete .icon,
+.btn-download .icon {
+    font-size: 1rem;
 }
 
 .btn-download {
@@ -320,6 +329,27 @@ canvas {
 
     header h1 {
         font-size: 1.5rem;
+    }
+
+    /* Hide button text on mobile, show only icons */
+    .btn-edit .text,
+    .btn-delete .text,
+    .btn-download .text {
+        display: none;
+    }
+
+    .btn-edit,
+    .btn-delete,
+    .btn-download {
+        padding: 8px 12px;
+        min-width: 40px;
+        justify-content: center;
+    }
+
+    .btn-edit .icon,
+    .btn-delete .icon,
+    .btn-download .icon {
+        font-size: 1.2rem;
     }
 
     .charts-container {
