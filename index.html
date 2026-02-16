@@ -1,0 +1,73 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Spectroscopy Experiment Diary</title>
+    <link rel="icon" type="image/png" href="spider-gwen.png">
+    <link rel="stylesheet" href="style.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Lab Diary</h1>
+        </header>
+
+        <div id="entries-container"></div>
+
+        <button id="new-entry-btn" class="btn-primary">+ New Entry</button>
+    </div>
+
+    <!-- New Entry Modal -->
+    <div id="entry-modal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Experiment</h2>
+                <span class="close">&times;</span>
+            </div>
+            <form id="entry-form">
+                <div class="form-group">
+                    <label for="title-input">Experiment Title</label>
+                    <input 
+                        type="text" 
+                        id="title-input" 
+                        placeholder="e.g., UV-Vis Scan of Sample A" 
+                        required
+                    >
+                </div>
+
+                <div class="form-group">
+                    <label for="absorption-csv">Absorption Spectra (CSV)</label>
+                    <input 
+                        type="file" 
+                        id="absorption-csv" 
+                        accept=".csv" 
+                        required
+                    >
+                    <small>Format: wavelength,intensity</small>
+                </div>
+
+                <div class="form-group">
+                    <label for="emission-csv">Emission Spectra (CSV)</label>
+                    <input 
+                        type="file" 
+                        id="emission-csv" 
+                        accept=".csv" 
+                        required
+                    >
+                    <small>Format: wavelength,intensity</small>
+                </div>
+
+                <div class="modal-footer">
+                    <button type="button" class="btn-secondary" id="cancel-btn">Cancel</button>
+                    <button type="submit" class="btn-primary">Save Experiment</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <script src="app.js"></script>
+</body>
+</html>
