@@ -156,13 +156,13 @@ function calculateEmissionStats(data) {
     };
 }
 
-function createCombinedChart(canvasId, absorptionData, emissionData) {
+function createCombinedChart(canvasId, absorptionData, emissionData, customCanvas = null) {
     // Destroy existing chart if it exists
     if (chartInstances[canvasId]) {
         chartInstances[canvasId].destroy();
     }
 
-    const canvas = document.getElementById(canvasId);
+    const canvas = customCanvas || document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
     
     // Check if mobile device
@@ -284,7 +284,7 @@ function createCombinedChart(canvasId, absorptionData, emissionData) {
                 },
                 y: {
                     min: 0,
-                    max: 1,
+                    max: 1.05,
                     title: {
                         display: true,
                         text: 'Normalized Absorbance / PL Intensity (a.u.)',
@@ -351,19 +351,42 @@ function renderEntry(experiment) {
     entry.querySelector('.btn-edit').addEventListener('click', () => editEntry(experiment));
     entry.querySelector('.btn-delete').addEventListener('click', () => deleteEntry(experiment.id));
 
+    const isMobile = window.innerWidth <= 768;
+    const chartWrapper = entry.querySelector('.chart-wrapper');
+    
     // Render combined chart after DOM elements are created (only if data exists)
     if ((experiment.absorption_data && experiment.absorption_data.length > 0) || 
         (experiment.emission_data && experiment.emission_data.length > 0)) {
-        setTimeout(() => {
-            createCombinedChart(
-                `spectrum-chart-${experiment.id}`,
-                experiment.absorption_data || [],
-                experiment.emission_data || []
-            );
-        }, 0);
+        
+        if (isMobile) {
+            // On mobile: show stats only, no chart
+            const emissionStats = calculateEmissionStats(experiment.emission_data || []);
+            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666;">';
+            
+            if (emissionStats && emissionStats.peakWavelength) {
+                statsHTML += `<div style="margin-bottom: 8px;">Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm</div>`;
+                if (emissionStats.fwhm) {
+                    statsHTML += `<div>FWHM: ${emissionStats.fwhm.toFixed(1)} nm</div>`;
+                }
+            } else {
+                statsHTML += '<div>No emission data available</div>';
+            }
+            
+            statsHTML += '</div>';
+            chartWrapper.innerHTML = statsHTML;
+        } else {
+            // Desktop: render full chart
+            setTimeout(() => {
+                createCombinedChart(
+                    `spectrum-chart-${experiment.id}`,
+                    experiment.absorption_data || [],
+                    experiment.emission_data || []
+                );
+            }, 0);
+        }
     } else {
         // Hide chart wrapper if no data
-        entry.querySelector('.chart-wrapper').style.display = 'none';
+        chartWrapper.style.display = 'none';
     }
 }
 
@@ -371,163 +394,79 @@ function renderEntry(experiment) {
 // DOWNLOAD CHART FUNCTION
 // ============================================================================
 function downloadChart(experimentId, absorptionData, emissionData) {
-    // Create off-screen canvas at export size with high DPI
-    const exportWidth = 1400;
-    const exportHeight = 700;
-    const dpi = 3;
+    const isMobile = window.innerWidth <= 768;
     
-    const offscreenCanvas = document.createElement('canvas');
-    offscreenCanvas.width = exportWidth * dpi;
-    offscreenCanvas.height = exportHeight * dpi;
-    
-    // Normalize data
-    const normalizedAbsorption = normalizeData(absorptionData);
-    const normalizedEmission = normalizeData(emissionData);
-    
-    // Calculate emission stats
-    const emissionStats = calculateEmissionStats(emissionData);
-    let subtitle = '';
-    if (emissionStats && emissionStats.peakWavelength) {
-        subtitle = `Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm`;
-        if (emissionStats.fwhm) {
-            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm`;
-        }
-    }
-    
-    // Calculate x-axis range
-    const allXValues = [
-        ...normalizedAbsorption.map(p => p.x),
-        ...normalizedEmission.map(p => p.x)
-    ];
-    const minX = Math.min(...allXValues);
-    const maxX = Math.max(...allXValues);
-    
-    // Render chart at export size
-    const tempChart = new Chart(offscreenCanvas.getContext('2d'), {
-        type: 'line',
-        data: {
-            datasets: [
-                {
-                    label: 'Absorption',
-                    data: normalizedAbsorption,
-                    borderColor: '#2563eb',
-                    backgroundColor: 'rgba(37, 99, 235, 0.0)',
-                    borderWidth: 2.5,
-                    tension: 0.2,
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 0,
-                    borderDash: []
-                },
-                {
-                    label: 'Emission',
-                    data: normalizedEmission,
-                    borderColor: '#dc2626',
-                    backgroundColor: 'rgba(220, 38, 38, 0.0)',
-                    borderWidth: 2.5,
-                    tension: 0.2,
-                    fill: false,
-                    pointRadius: 0,
-                    pointHoverRadius: 0,
-                    borderDash: []
-                }
-            ]
-        },
-        options: {
-            responsive: false,
-            animation: false,
-            devicePixelRatio: dpi,
-            plugins: {
-                legend: {
-                    display: true,
-                    position: 'top',
-                    align: 'end',
-                    labels: {
-                        font: { size: 11 },
-                        usePointStyle: true,
-                        boxWidth: 6,
-                        padding: 10
-                    }
-                },
-                subtitle: {
-                    display: subtitle !== '',
-                    text: subtitle,
-                    position: 'top',
-                    align: 'end',
-                    font: {
-                        size: 11,
-                        weight: 'normal',
-                        family: 'monospace'
-                    },
-                    color: '#666',
-                    padding: {
-                        bottom: 10
-                    }
-                },
-                tooltip: { enabled: false }
-            },
-            scales: {
-                x: {
-                    type: 'linear',
-                    min: minX,
-                    max: maxX,
-                    title: {
-                        display: true,
-                        text: 'Wavelength (nm)',
-                        font: { size: 13, weight: 'bold' }
-                    },
-                    ticks: {
-                        maxTicksLimit: 8
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                },
-                y: {
-                    min: 0,
-                    max: 1,
-                    title: {
-                        display: true,
-                        text: 'Normalized Absorbance / PL Intensity (a.u.)',
-                        font: { size: 13, weight: 'bold' }
-                    },
-                    ticks: {
-                        stepSize: 0.2,
-                        callback: function(value) {
-                            return value.toFixed(1);
-                        }
-                    },
-                    grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
-                    }
-                }
+    if (isMobile) {
+        // Mobile: create temporary desktop-sized chart off-screen
+        const tempCanvas = document.createElement('canvas');
+        const exportWidth = 1400;
+        const exportHeight = 700;
+        
+        tempCanvas.width = exportWidth;
+        tempCanvas.height = exportHeight;
+        tempCanvas.style.display = 'none';
+        document.body.appendChild(tempCanvas);
+        
+        // Create temporary chart
+        const tempChart = createCombinedChart(`temp-export-${experimentId}`, absorptionData, emissionData, tempCanvas);
+        
+        setTimeout(() => {
+            // Create high-res export
+            const scaleFactor = 3;
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = exportWidth * scaleFactor;
+            exportCanvas.height = exportHeight * scaleFactor;
+            const ctx = exportCanvas.getContext('2d');
+            
+            ctx.scale(scaleFactor, scaleFactor);
+            ctx.fillStyle = 'white';
+            ctx.fillRect(0, 0, exportWidth, exportHeight);
+            ctx.drawImage(tempCanvas, 0, 0, exportWidth, exportHeight);
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `spectrum_${experimentId}.png`;
+            link.href = exportCanvas.toDataURL('image/png', 1.0);
+            link.click();
+            
+            // Cleanup
+            if (chartInstances[`temp-export-${experimentId}`]) {
+                chartInstances[`temp-export-${experimentId}`].destroy();
             }
+            document.body.removeChild(tempCanvas);
+        }, 300);
+        
+    } else {
+        // Desktop: use existing chart
+        const canvasId = `spectrum-chart-${experimentId}`;
+        const chart = chartInstances[canvasId];
+        
+        if (!chart) {
+            alert('No chart available to download');
+            return;
         }
-    });
-    
-    // Wait for render, add white background, and download
-    setTimeout(() => {
-        const finalCanvas = document.createElement('canvas');
-        finalCanvas.width = exportWidth * dpi;
-        finalCanvas.height = exportHeight * dpi;
-        const ctx = finalCanvas.getContext('2d');
         
-        // White background
+        const originalCanvas = document.getElementById(canvasId);
+        const scaleFactor = 3;
+        const exportWidth = originalCanvas.width;
+        const exportHeight = originalCanvas.height;
+        
+        const tempCanvas = document.createElement('canvas');
+        tempCanvas.width = exportWidth * scaleFactor;
+        tempCanvas.height = exportHeight * scaleFactor;
+        const ctx = tempCanvas.getContext('2d');
+        
+        ctx.scale(scaleFactor, scaleFactor);
         ctx.fillStyle = 'white';
-        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
-        
-        // Draw chart
-        ctx.drawImage(offscreenCanvas, 0, 0);
+        ctx.fillRect(0, 0, exportWidth, exportHeight);
+        ctx.drawImage(originalCanvas, 0, 0, exportWidth, exportHeight);
         
         // Download
         const link = document.createElement('a');
         link.download = `spectrum_${experimentId}.png`;
-        link.href = finalCanvas.toDataURL('image/png', 1.0);
+        link.href = tempCanvas.toDataURL('image/png', 1.0);
         link.click();
-        
-        // Cleanup
-        tempChart.destroy();
-    }, 100);
+    }
 }
 
 // ============================================================================
