@@ -371,42 +371,163 @@ function renderEntry(experiment) {
 // DOWNLOAD CHART FUNCTION
 // ============================================================================
 function downloadChart(experimentId, absorptionData, emissionData) {
-    const canvasId = `spectrum-chart-${experimentId}`;
-    const chart = chartInstances[canvasId];
-    
-    if (!chart) {
-        alert('No chart available to download');
-        return;
-    }
-    
-    const originalCanvas = document.getElementById(canvasId);
-    
-    // Always export at desktop size with high quality
+    // Create off-screen canvas at export size with high DPI
     const exportWidth = 1400;
     const exportHeight = 700;
-    const scaleFactor = 3;
+    const dpi = 3;
     
-    // Create temp canvas for export
-    const tempCanvas = document.createElement('canvas');
-    tempCanvas.width = exportWidth * scaleFactor;
-    tempCanvas.height = exportHeight * scaleFactor;
-    const ctx = tempCanvas.getContext('2d');
+    const offscreenCanvas = document.createElement('canvas');
+    offscreenCanvas.width = exportWidth * dpi;
+    offscreenCanvas.height = exportHeight * dpi;
     
-    // Scale for high DPI
-    ctx.scale(scaleFactor, scaleFactor);
+    // Normalize data
+    const normalizedAbsorption = normalizeData(absorptionData);
+    const normalizedEmission = normalizeData(emissionData);
     
-    // Fill white background
-    ctx.fillStyle = 'white';
-    ctx.fillRect(0, 0, exportWidth, exportHeight);
+    // Calculate emission stats
+    const emissionStats = calculateEmissionStats(emissionData);
+    let subtitle = '';
+    if (emissionStats && emissionStats.peakWavelength) {
+        subtitle = `Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm`;
+        if (emissionStats.fwhm) {
+            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm`;
+        }
+    }
     
-    // Draw current chart scaled to export size
-    ctx.drawImage(originalCanvas, 0, 0, exportWidth, exportHeight);
+    // Calculate x-axis range
+    const allXValues = [
+        ...normalizedAbsorption.map(p => p.x),
+        ...normalizedEmission.map(p => p.x)
+    ];
+    const minX = Math.min(...allXValues);
+    const maxX = Math.max(...allXValues);
     
-    // Download
-    const link = document.createElement('a');
-    link.download = `spectrum_${experimentId}.png`;
-    link.href = tempCanvas.toDataURL('image/png', 1.0);
-    link.click();
+    // Render chart at export size
+    const tempChart = new Chart(offscreenCanvas.getContext('2d'), {
+        type: 'line',
+        data: {
+            datasets: [
+                {
+                    label: 'Absorption',
+                    data: normalizedAbsorption,
+                    borderColor: '#2563eb',
+                    backgroundColor: 'rgba(37, 99, 235, 0.0)',
+                    borderWidth: 2.5,
+                    tension: 0.2,
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderDash: []
+                },
+                {
+                    label: 'Emission',
+                    data: normalizedEmission,
+                    borderColor: '#dc2626',
+                    backgroundColor: 'rgba(220, 38, 38, 0.0)',
+                    borderWidth: 2.5,
+                    tension: 0.2,
+                    fill: false,
+                    pointRadius: 0,
+                    pointHoverRadius: 0,
+                    borderDash: []
+                }
+            ]
+        },
+        options: {
+            responsive: false,
+            animation: false,
+            devicePixelRatio: dpi,
+            plugins: {
+                legend: {
+                    display: true,
+                    position: 'top',
+                    align: 'end',
+                    labels: {
+                        font: { size: 11 },
+                        usePointStyle: true,
+                        boxWidth: 6,
+                        padding: 10
+                    }
+                },
+                subtitle: {
+                    display: subtitle !== '',
+                    text: subtitle,
+                    position: 'top',
+                    align: 'end',
+                    font: {
+                        size: 11,
+                        weight: 'normal',
+                        family: 'monospace'
+                    },
+                    color: '#666',
+                    padding: {
+                        bottom: 10
+                    }
+                },
+                tooltip: { enabled: false }
+            },
+            scales: {
+                x: {
+                    type: 'linear',
+                    min: minX,
+                    max: maxX,
+                    title: {
+                        display: true,
+                        text: 'Wavelength (nm)',
+                        font: { size: 13, weight: 'bold' }
+                    },
+                    ticks: {
+                        maxTicksLimit: 8
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                },
+                y: {
+                    min: 0,
+                    max: 1,
+                    title: {
+                        display: true,
+                        text: 'Normalized Absorbance / PL Intensity (a.u.)',
+                        font: { size: 13, weight: 'bold' }
+                    },
+                    ticks: {
+                        stepSize: 0.2,
+                        callback: function(value) {
+                            return value.toFixed(1);
+                        }
+                    },
+                    grid: {
+                        color: 'rgba(0, 0, 0, 0.05)'
+                    }
+                }
+            }
+        }
+    });
+    
+    // Wait for render, add white background, and download
+    setTimeout(() => {
+        const finalCanvas = document.createElement('canvas');
+        finalCanvas.width = exportWidth * dpi;
+        finalCanvas.height = exportHeight * dpi;
+        const ctx = finalCanvas.getContext('2d');
+        
+        // White background
+        ctx.fillStyle = 'white';
+        ctx.fillRect(0, 0, finalCanvas.width, finalCanvas.height);
+        
+        // Draw chart
+        ctx.drawImage(offscreenCanvas, 0, 0);
+        
+        // Download
+        const link = document.createElement('a');
+        link.download = `spectrum_${experimentId}.png`;
+        link.href = finalCanvas.toDataURL('image/png', 1.0);
+        link.click();
+        
+        // Cleanup
+        tempChart.destroy();
+    }, 100);
 }
 
 // ============================================================================
