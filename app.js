@@ -291,7 +291,7 @@ function createCombinedChart(canvasId, absorptionData, emissionData, customCanva
                         font: { size: 13, weight: 'bold' }
                     },
                     ticks: {
-                        stepSize: 0.2,
+                        count: 6,
                         callback: function(value) {
                             return value.toFixed(1);
                         }
