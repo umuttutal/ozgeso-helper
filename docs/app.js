@@ -121,6 +121,9 @@ function createCombinedChart(canvasId, absorptionData, emissionData) {
     const canvas = document.getElementById(canvasId);
     const ctx = canvas.getContext('2d');
     
+    // Check if mobile device
+    const isMobile = window.innerWidth <= 768;
+    
     // Normalize both datasets to [0, 1]
     const normalizedAbsorption = normalizeData(absorptionData);
     const normalizedEmission = normalizeData(emissionData);
@@ -167,9 +170,10 @@ function createCombinedChart(canvasId, absorptionData, emissionData) {
             responsive: true,
             maintainAspectRatio: true,
             interaction: {
-                mode: 'index',
+                mode: isMobile ? null : 'index',
                 intersect: false
             },
+            events: isMobile ? [] : ['mousemove', 'mouseout', 'click', 'touchstart', 'touchmove'],
             plugins: {
                 legend: {
                     display: true,
@@ -255,6 +259,7 @@ function renderEntry(experiment) {
                 <div class="entry-timestamp">${formattedDate}</div>
             </div>
             <div class="entry-actions">
+                <button class="btn-download" data-id="${experiment.id}">Download Plot</button>
                 <button class="btn-edit" data-id="${experiment.id}">Edit</button>
                 <button class="btn-delete" data-id="${experiment.id}">Delete</button>
             </div>
@@ -266,18 +271,45 @@ function renderEntry(experiment) {
 
     entriesContainer.appendChild(entry);
 
-    // Add event listeners for edit and delete buttons
+    // Add event listeners for buttons
+    entry.querySelector('.btn-download').addEventListener('click', () => downloadChart(experiment.id));
     entry.querySelector('.btn-edit').addEventListener('click', () => editEntry(experiment));
     entry.querySelector('.btn-delete').addEventListener('click', () => deleteEntry(experiment.id));
 
-    // Render combined chart after DOM elements are created
-    setTimeout(() => {
-        createCombinedChart(
-            `spectrum-chart-${experiment.id}`,
-            experiment.absorption_data,
-            experiment.emission_data
-        );
-    }, 0);
+    // Render combined chart after DOM elements are created (only if data exists)
+    if ((experiment.absorption_data && experiment.absorption_data.length > 0) || 
+        (experiment.emission_data && experiment.emission_data.length > 0)) {
+        setTimeout(() => {
+            createCombinedChart(
+                `spectrum-chart-${experiment.id}`,
+                experiment.absorption_data || [],
+                experiment.emission_data || []
+            );
+        }, 0);
+    } else {
+        // Hide chart wrapper if no data
+        entry.querySelector('.chart-wrapper').style.display = 'none';
+    }
+}
+
+// ============================================================================
+// DOWNLOAD CHART FUNCTION
+// ============================================================================
+function downloadChart(experimentId) {
+    const canvasId = `spectrum-chart-${experimentId}`;
+    const chart = chartInstances[canvasId];
+    
+    if (!chart) {
+        alert('No chart available to download');
+        return;
+    }
+    
+    // Get canvas and create high-res version
+    const canvas = document.getElementById(canvasId);
+    const link = document.createElement('a');
+    link.download = `spectrum_${experimentId}.png`;
+    link.href = canvas.toDataURL('image/png', 1.0);
+    link.click();
 }
 
 // ============================================================================
@@ -368,8 +400,8 @@ async function handleFormSubmit(e) {
     const absorptionFile = document.getElementById('absorption-csv').files[0];
     const emissionFile = document.getElementById('emission-csv').files[0];
 
-    if (!title || !absorptionFile || !emissionFile) {
-        alert('Please fill in all fields');
+    if (!title) {
+        alert('Please enter a title');
         return;
     }
 
@@ -380,15 +412,18 @@ async function handleFormSubmit(e) {
         submitBtn.disabled = true;
         submitBtn.textContent = 'Saving...';
 
-        // Parse CSV files
-        const absorptionCSV = await readFileAsText(absorptionFile);
-        const emissionCSV = await readFileAsText(emissionFile);
+        // Parse CSV files if provided, otherwise use empty arrays
+        let absorptionData = [];
+        let emissionData = [];
 
-        const absorptionData = parseCSV(absorptionCSV);
-        const emissionData = parseCSV(emissionCSV);
+        if (absorptionFile) {
+            const absorptionCSV = await readFileAsText(absorptionFile);
+            absorptionData = parseCSV(absorptionCSV);
+        }
 
-        if (absorptionData.length === 0 || emissionData.length === 0) {
-            throw new Error('CSV files could not be parsed. Ensure format is: wavelength,intensity');
+        if (emissionFile) {
+            const emissionCSV = await readFileAsText(emissionFile);
+            emissionData = parseCSV(emissionCSV);
         }
 
         // Insert or Update in Supabase
