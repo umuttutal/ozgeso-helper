@@ -14,7 +14,7 @@ body {
 .container {
     max-width: 1000px;
     margin: 0 auto;
-    background: rgb(231, 231, 231);
+    background: rgb(223, 223, 223);
     border-radius: 12px;
     padding: 40px;
     box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
@@ -37,7 +37,7 @@ header h1 {
 }
 
 .entry {
-    background: #f6f6f6;
+    background: #ffffff;
     border: 1px solid #858585;
     border-radius: 9px;
     padding: 25px;
