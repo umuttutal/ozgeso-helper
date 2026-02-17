@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(90deg, rgb(199, 21, 133) 0%, rgb(176, 224, 230) 100%);
+    background: linear-gradient(180deg, rgb(199, 21, 133) 0%, rgb(176, 224, 230) 100%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -27,7 +27,7 @@ header {
 
 header h1 {
     color: #333;
-    font-size: 3.5rem;
+    font-size: 4.5rem;
     font-family: 'Mystery Quest', cursive;
     transform: rotate(-2deg);
     letter-spacing: 2.5px;
