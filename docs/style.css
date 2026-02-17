@@ -28,7 +28,7 @@ header {
 header h1 {
     color: #333;
     font-size: 3.5rem;
-    font-family: 'Permanent Marker', cursive;
+    font-family: 'Mystery Quest', cursive;
     transform: rotate(-2deg);
     letter-spacing: 2.5px;
 }
@@ -232,9 +232,7 @@ canvas {
     display: flex;
     justify-content: space-between;
     align-items: center;
-    margin-bottom: 25px;
-    border-bottom: 2px solid #667eea;
-    padding-bottom: 15px;
+    margin-bottom: 15px;
 }
 
 .modal-header h2 {
