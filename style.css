@@ -6,7 +6,7 @@
 
 body {
     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
-    background: linear-gradient(180deg, rgb(199, 21, 133) 0%, rgb(176, 224, 230) 100%);
+    background: linear-gradient(180deg, rgb(199, 21, 133) 0%, rgb(176, 224, 230) 90%);
     min-height: 100vh;
     padding: 20px;
 }
@@ -350,15 +350,15 @@ canvas {
     .btn-edit,
     .btn-delete,
     .btn-download {
-        padding: 8px 12px;
-        min-width: 40px;
+        padding: 6px 10px;
+        min-width: 36px;
         justify-content: center;
     }
 
     .btn-edit .icon,
     .btn-delete .icon,
     .btn-download .icon {
-        font-size: 1rem;
+        font-size: 0.8rem;
     }
 
     .charts-container {
