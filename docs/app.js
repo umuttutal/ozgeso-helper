@@ -333,13 +333,32 @@ function createExportChart(absorptionData, emissionData) {
         }
     }
     
-    // Calculate shared x-axis range
-    const allXValues = [
-        ...normalizedAbsorption.map(p => p.x),
-        ...normalizedEmission.map(p => p.x)
-    ];
-    const minX = Math.min(...allXValues);
-    const maxX = Math.max(...allXValues);
+    // Calculate meaningful x-axis range (crop out empty baseline)
+    const threshold = 0.02;
+    const meaningfulAbsorption = normalizedAbsorption.filter(p => p.y > threshold);
+    const meaningfulEmission = normalizedEmission.filter(p => p.y > threshold);
+    
+    let minX, maxX;
+    if (meaningfulAbsorption.length > 0 || meaningfulEmission.length > 0) {
+        const meaningfulXValues = [
+            ...meaningfulAbsorption.map(p => p.x),
+            ...meaningfulEmission.map(p => p.x)
+        ];
+        const dataMinX = Math.min(...meaningfulXValues);
+        const dataMaxX = Math.max(...meaningfulXValues);
+        const range = dataMaxX - dataMinX;
+        const padding = range * 0.05;  // 5% padding on each side
+        minX = Math.max(dataMinX - padding, Math.min(...normalizedAbsorption.map(p => p.x), ...normalizedEmission.map(p => p.x)));
+        maxX = Math.min(dataMaxX + padding, Math.max(...normalizedAbsorption.map(p => p.x), ...normalizedEmission.map(p => p.x)));
+    } else {
+        // Fallback to full range if no meaningful data
+        const allXValues = [
+            ...normalizedAbsorption.map(p => p.x),
+            ...normalizedEmission.map(p => p.x)
+        ];
+        minX = Math.min(...allXValues);
+        maxX = Math.max(...allXValues);
+    }
 
     const chart = new Chart(ctx, {
         type: 'line',
@@ -350,7 +369,7 @@ function createExportChart(absorptionData, emissionData) {
                     data: normalizedAbsorption,
                     borderColor: '#2563eb',
                     backgroundColor: 'rgba(37, 99, 235, 0.0)',
-                    borderWidth: 3,  // Slightly thicker for publication
+                    borderWidth: 4,  // Thicker for better visibility
                     tension: 0.2,
                     fill: false,
                     pointRadius: 0,
@@ -362,7 +381,7 @@ function createExportChart(absorptionData, emissionData) {
                     data: normalizedEmission,
                     borderColor: '#dc2626',
                     backgroundColor: 'rgba(220, 38, 38, 0.0)',
-                    borderWidth: 3,  // Slightly thicker for publication
+                    borderWidth: 4,  // Thicker for better visibility
                     tension: 0.2,
                     fill: false,
                     pointRadius: 0,
@@ -385,7 +404,7 @@ function createExportChart(absorptionData, emissionData) {
                     position: 'top',
                     align: 'end',
                     labels: {
-                        font: { size: 12 },  // Slightly larger for publication
+                        font: { size: 14, family: 'Arial, Helvetica, sans-serif' },
                         usePointStyle: true,
                         boxWidth: 6,
                         padding: 10
@@ -397,9 +416,9 @@ function createExportChart(absorptionData, emissionData) {
                     position: 'top',
                     align: 'end',
                     font: {
-                        size: 12,  // Slightly larger for publication
+                        size: 14,
                         weight: 'normal',
-                        family: 'monospace'
+                        family: 'Arial, Helvetica, sans-serif'
                     },
                     color: '#666',
                     padding: {
@@ -418,14 +437,14 @@ function createExportChart(absorptionData, emissionData) {
                     title: {
                         display: true,
                         text: 'Wavelength (nm)',
-                        font: { size: 14, weight: 'bold' }  // Larger for publication
+                        font: { size: 16, weight: 'bold', family: 'Arial, Helvetica, sans-serif' }
                     },
                     ticks: {
                         maxTicksLimit: 8,
-                        font: { size: 12 }
+                        font: { size: 14, family: 'Arial, Helvetica, sans-serif' }
                     },
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                        color: 'rgba(0, 0, 0, 0.1)'
                     }
                 },
                 y: {
@@ -434,18 +453,18 @@ function createExportChart(absorptionData, emissionData) {
                     title: {
                         display: true,
                         text: 'Normalized Absorbance / PL Intensity (a.u.)',
-                        font: { size: 14, weight: 'bold' }  // Larger for publication
+                        font: { size: 16, weight: 'bold', family: 'Arial, Helvetica, sans-serif' }
                     },
                     ticks: {
                         stepSize: 0.2,
-                        font: { size: 12 },
+                        font: { size: 14, family: 'Arial, Helvetica, sans-serif' },
                         callback: function(value) {
                             if (value > 1.0) return null;
                             return value.toFixed(1);
                         }
                     },
                     grid: {
-                        color: 'rgba(0, 0, 0, 0.05)'
+                        color: 'rgba(0, 0, 0, 0.1)'
                     }
                 }
             }
