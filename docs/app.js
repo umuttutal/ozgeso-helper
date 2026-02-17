@@ -311,7 +311,7 @@ function createCombinedChart(canvasId, absorptionData, emissionData, customCanva
 // ============================================================================
 // EXPORT CHART RENDERING (Publication-ready)
 // ============================================================================
-function createExportChart(absorptionData, emissionData) {
+function createExportChart(title, absorptionData, emissionData) {
     // Create off-screen canvas with fixed dimensions
     const canvas = document.createElement('canvas');
     canvas.width = 1400;
@@ -400,6 +400,22 @@ function createExportChart(absorptionData, emissionData) {
             },
             events: [],  // No interactivity needed
             plugins: {
+                title: {
+                    display: true,
+                    text: title,
+                    position: 'top',
+                    align: 'start',
+                    font: {
+                        size: 28,
+                        weight: 'bold',
+                        family: 'Arial, Helvetica, sans-serif'
+                    },
+                    color: '#000000',
+                    padding: {
+                        top: 10,
+                        bottom: 15
+                    }
+                },
                 legend: {
                     display: true,
                     position: 'top',
@@ -524,7 +540,7 @@ function renderEntry(experiment) {
     entriesContainer.appendChild(entry);
 
     // Add event listeners for buttons
-    entry.querySelector('.btn-download').addEventListener('click', () => downloadChart(experiment.id, experiment.absorption_data || [], experiment.emission_data || []));
+    entry.querySelector('.btn-download').addEventListener('click', () => downloadChart(experiment.id, experiment.title, experiment.absorption_data || [], experiment.emission_data || []));
     entry.querySelector('.btn-edit').addEventListener('click', () => editEntry(experiment));
     entry.querySelector('.btn-delete').addEventListener('click', () => deleteEntry(experiment.id));
 
@@ -570,9 +586,9 @@ function renderEntry(experiment) {
 // ============================================================================
 // DOWNLOAD CHART FUNCTION
 // ============================================================================
-function downloadChart(experimentId, absorptionData, emissionData) {
+function downloadChart(experimentId, title, absorptionData, emissionData) {
     // Create publication-ready export chart (same for mobile and desktop)
-    const { chart, canvas } = createExportChart(absorptionData, emissionData);
+    const { chart, canvas } = createExportChart(title, absorptionData, emissionData);
     
     // Add to DOM temporarily (required for Chart.js rendering)
     document.body.appendChild(canvas);
