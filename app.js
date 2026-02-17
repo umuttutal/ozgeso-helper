@@ -511,7 +511,7 @@ function renderEntry(experiment) {
         if (isMobile) {
             // On mobile: show stats only, no chart
             const emissionStats = calculateEmissionStats(experiment.emission_data || []);
-            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666; font-size: 13px;">';
+            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666; font-size: 12px;">';
             
             if (emissionStats && emissionStats.peakWavelength) {
                 statsHTML += `<div style="margin-bottom: 8px;">Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm</div>`;
@@ -552,7 +552,8 @@ function downloadChart(experimentId, absorptionData, emissionData) {
     
     setTimeout(() => {
         // Create high-resolution export canvas
-        const scaleFactor = 3;
+        const isMobile = window.innerWidth <= 768;
+        const scaleFactor = isMobile ? 2 : 3;  // Reduce scale on mobile for smaller file size
         const exportWidth = canvas.width;
         const exportHeight = canvas.height;
         
