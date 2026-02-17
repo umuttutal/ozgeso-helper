@@ -178,7 +178,7 @@ function createCombinedChart(canvasId, absorptionData, emissionData, customCanva
     if (emissionStats && emissionStats.peakWavelength) {
         subtitle = `Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm`;
         if (emissionStats.fwhm) {
-            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm`;
+            subtitle += ` | FWHM: ${emissionStats.fwhm.toFixed(1)} nm  `;
         }
     }
     
