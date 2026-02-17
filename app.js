@@ -519,6 +519,7 @@ function renderEntry(experiment) {
         <div class="chart-wrapper">
             <canvas id="spectrum-chart-${experiment.id}"></canvas>
         </div>
+        ${experiment.notes ? `<div class="entry-notes">${experiment.notes.replace(/\n/g, '<br>')}</div>` : ''}
     `;
 
     entriesContainer.appendChild(entry);
@@ -668,6 +669,7 @@ function editEntry(experiment) {
     
     // Populate form with existing data
     document.getElementById('title-input').value = experiment.title;
+    document.getElementById('notes-input').value = experiment.notes || '';
     
     // Change modal title
     document.querySelector('.modal-header h2').textContent = 'Edit Experiment';
@@ -696,6 +698,7 @@ async function handleFormSubmit(e) {
     e.preventDefault();
 
     const title = document.getElementById('title-input').value.trim();
+    const notes = document.getElementById('notes-input').value.trim();
     const absorptionFile = document.getElementById('absorption-csv').files[0];
     const emissionFile = document.getElementById('emission-csv').files[0];
 
@@ -733,6 +736,7 @@ async function handleFormSubmit(e) {
                 .from('experiments')
                 .update({
                     title: title,
+                    notes: notes,
                     absorption_data: absorptionData,
                     emission_data: emissionData
                 })
@@ -745,6 +749,7 @@ async function handleFormSubmit(e) {
                 .insert([
                     {
                         title: title,
+                        notes: notes,
                         absorption_data: absorptionData,
                         emission_data: emissionData
                     }
