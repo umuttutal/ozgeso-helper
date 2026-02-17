@@ -314,7 +314,7 @@ function createExportChart(absorptionData, emissionData) {
     // Create off-screen canvas with fixed dimensions
     const canvas = document.createElement('canvas');
     canvas.width = 1400;
-    canvas.height = 1000;
+    canvas.height = 850;
     canvas.style.display = 'none';
     
     const ctx = canvas.getContext('2d');
