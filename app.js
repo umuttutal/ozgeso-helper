@@ -404,7 +404,7 @@ function createExportChart(absorptionData, emissionData) {
                     position: 'top',
                     align: 'end',
                     labels: {
-                        font: { size: 14, family: 'Arial, Helvetica, sans-serif' },
+                        font: { size: 20, family: 'Arial, Helvetica, sans-serif' },
                         usePointStyle: true,
                         boxWidth: 6,
                         padding: 10
@@ -416,13 +416,14 @@ function createExportChart(absorptionData, emissionData) {
                     position: 'top',
                     align: 'end',
                     font: {
-                        size: 14,
+                        size: 24,
                         weight: 'normal',
                         family: 'Arial, Helvetica, sans-serif'
                     },
                     color: '#666',
                     padding: {
-                        bottom: 10
+                        bottom: 10,
+                        right: 5,
                     }
                 },
                 tooltip: {
@@ -437,11 +438,13 @@ function createExportChart(absorptionData, emissionData) {
                     title: {
                         display: true,
                         text: 'Wavelength (nm)',
-                        font: { size: 16, weight: 'bold', family: 'Arial, Helvetica, sans-serif' }
+                        color: '#000000',
+                        font: { size: 24, weight: 'bold', family: 'Arial, Helvetica, sans-serif' }
                     },
                     ticks: {
                         maxTicksLimit: 8,
-                        font: { size: 14, family: 'Arial, Helvetica, sans-serif' }
+                        color: '#000000',
+                        font: { size: 20, family: 'Arial, Helvetica, sans-serif' }
                     },
                     grid: {
                         color: 'rgba(0, 0, 0, 0.1)'
@@ -453,11 +456,13 @@ function createExportChart(absorptionData, emissionData) {
                     title: {
                         display: true,
                         text: 'Normalized Absorbance / PL Intensity (a.u.)',
-                        font: { size: 16, weight: 'bold', family: 'Arial, Helvetica, sans-serif' }
+                        color: '#000000',
+                        font: { size: 24, weight: 'bold', family: 'Arial, Helvetica, sans-serif' }
                     },
                     ticks: {
                         stepSize: 0.2,
-                        font: { size: 14, family: 'Arial, Helvetica, sans-serif' },
+                        color: '#000000',
+                        font: { size: 20, family: 'Arial, Helvetica, sans-serif' },
                         callback: function(value) {
                             if (value > 1.0) return null;
                             return value.toFixed(1);
