@@ -405,9 +405,12 @@ function createExportChart(absorptionData, emissionData) {
                     align: 'end',
                     labels: {
                         font: { size: 20, family: 'Arial, Helvetica, sans-serif' },
+                        color: '#000000',
                         usePointStyle: true,
-                        boxWidth: 6,
-                        padding: 10
+                        pointStyleWidth: 12,
+                        boxWidth: 12,
+                        boxHeight: 12,
+                        padding: 15
                     }
                 },
                 subtitle: {
@@ -420,7 +423,7 @@ function createExportChart(absorptionData, emissionData) {
                         weight: 'normal',
                         family: 'Arial, Helvetica, sans-serif'
                     },
-                    color: '#666',
+                    color: '#000000',
                     padding: {
                         bottom: 10,
                         right: 5,
