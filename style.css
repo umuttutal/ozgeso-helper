@@ -37,9 +37,9 @@ header h1 {
 }
 
 .entry {
-    background: #f8f9fa;
-    border: 1px solid #9c9c9c;
-    border-radius: 8px;
+    background: #cdcdcd;
+    border: 1px solid #858585;
+    border-radius: 9px;
     padding: 25px;
     margin-bottom: 30px;
     box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
