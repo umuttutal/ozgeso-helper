@@ -404,9 +404,9 @@ function createExportChart(title, absorptionData, emissionData) {
                     display: true,
                     text: title,
                     position: 'top',
-                    align: 'start',
+                    align: 'center',
                     font: {
-                        size: 28,
+                        size: 36,
                         weight: 'bold',
                         family: 'Arial, Helvetica, sans-serif'
                     },
