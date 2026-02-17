@@ -221,7 +221,6 @@ function createCombinedChart(canvasId, absorptionData, emissionData, customCanva
             ]
         },
         options: {
-            devicePixelRatio: 1,
             animation: false,
             responsive: true,
             maintainAspectRatio: true,
@@ -364,7 +363,7 @@ function renderEntry(experiment) {
         if (isMobile) {
             // On mobile: show stats only, no chart
             const emissionStats = calculateEmissionStats(experiment.emission_data || []);
-            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666; font-size: 10px;">';
+            let statsHTML = '<div style="padding: 20px; background: white; border-radius: 8px; font-family: monospace; color: #666; font-size: 13px;">';
             
             if (emissionStats && emissionStats.peakWavelength) {
                 statsHTML += `<div style="margin-bottom: 8px;">Emission Peak: ${emissionStats.peakWavelength.toFixed(1)} nm</div>`;
@@ -407,8 +406,6 @@ function downloadChart(experimentId, absorptionData, emissionData) {
         
         tempCanvas.width = exportWidth;
         tempCanvas.height = exportHeight;
-        tempCanvas.style.width = exportWidth + 'px';
-        tempCanvas.style.height = exportHeight + 'px';
         tempCanvas.style.display = 'none';
         document.body.appendChild(tempCanvas);
         
