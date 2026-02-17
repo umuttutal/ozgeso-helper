@@ -425,8 +425,7 @@ function createExportChart(absorptionData, emissionData) {
                     },
                     color: '#000000',
                     padding: {
-                        bottom: 10,
-                        right: 5,
+                        bottom: 5
                     }
                 },
                 tooltip: {
