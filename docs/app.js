@@ -236,8 +236,9 @@ function createCombinedChart(canvasId, absorptionData, emissionData, customCanva
                     align: 'end',
                     labels: {
                         font: { size: 11 },
-                        usePointStyle: true,
-                        boxWidth: 6,
+                        usePointStyle: false,
+                        boxWidth: 30,
+                        boxHeight: 2,
                         padding: 10
                     }
                 },
@@ -406,10 +407,9 @@ function createExportChart(absorptionData, emissionData) {
                     labels: {
                         font: { size: 20, family: 'Arial, Helvetica, sans-serif' },
                         color: '#000000',
-                        usePointStyle: true,
-                        pointStyleWidth: 12,
-                        boxWidth: 12,
-                        boxHeight: 12,
+                        usePointStyle: false,
+                        boxWidth: 40,
+                        boxHeight: 3,
                         padding: 15
                     }
                 },
